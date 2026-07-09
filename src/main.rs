@@ -264,7 +264,9 @@ fn update_agents_md(root: &Path, slug: &str) -> Result<()> {
          Project context is stored locally per developer, outside the repository:\n\
          `${{XDG_DATA_HOME:-~/.local/share}}/mem/<slug>/project_context.db`.\n\
          The project slug (`{slug}`) is fixed in the `.mem-project` file.\n\
-         The path can be overridden via the `MEMORY_DB_DIR` variable.\n{AGENTS_END}\n"
+         The path can be overridden via the `MEMORY_DB_DIR` variable.\n\n\
+         Use the `mcp mem-cli` server for context memory; if `mcp mem-cli` is not\n\
+         connected, fall back to the `mem-cli` shell command.\n{AGENTS_END}\n"
     );
 
     // Read the existing file. A missing file is fine (we create it), but any
