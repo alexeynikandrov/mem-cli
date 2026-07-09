@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-07-09
+
+### Changed
+- The managed `AGENTS.md` block written by `mem-cli init` now instructs agents
+  to use the `mcp mem-cli` server for context memory, falling back to the
+  `mem-cli` shell command when the MCP server is not connected.
+
 ## [1.7.1] - 2026-07-09
 
 ### Fixed
