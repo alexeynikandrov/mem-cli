@@ -267,7 +267,19 @@ fn update_agents_md(root: &Path, slug: &str) -> Result<()> {
          The path can be overridden via the `MEMORY_DB_DIR` variable.\n{AGENTS_END}\n"
     );
 
-    let existing = std::fs::read_to_string(&path).unwrap_or_default();
+    // Read the existing file. A missing file is fine (we create it), but any
+    // other error (e.g. invalid UTF-8, permissions) must abort: otherwise we
+    // would silently overwrite and destroy the existing AGENTS.md content.
+    let existing = match std::fs::read_to_string(&path) {
+        Ok(s) => s,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
+        Err(e) => {
+            return Err(anyhow::Error::new(e).context(format!(
+                "refusing to overwrite {}: cannot read existing file",
+                path.display()
+            )));
+        }
+    };
     let new_content = match (existing.find(AGENTS_START), existing.find(AGENTS_END)) {
         (Some(s), Some(e)) if e > s => {
             let end = e + AGENTS_END.len();
@@ -655,6 +667,33 @@ mod tests {
         update_mcp_json(&root).unwrap();
         let second = std::fs::read_to_string(root.join(".mcp.json")).unwrap();
         assert_eq!(first, second);
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn agents_md_preserves_existing_content() {
+        let root = temp_root();
+        let path = root.join("AGENTS.md");
+        std::fs::write(&path, "# Project\n\nImportant instructions.\n").unwrap();
+        update_agents_md(&root, "slug-123").unwrap();
+        let content = std::fs::read_to_string(&path).unwrap();
+        assert!(content.contains("Important instructions."));
+        assert!(content.contains(AGENTS_START));
+        assert!(content.contains("slug-123"));
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn agents_md_does_not_overwrite_on_read_error() {
+        let root = temp_root();
+        let path = root.join("AGENTS.md");
+        // Invalid UTF-8 makes read_to_string fail; the file must be left intact.
+        let original = b"# Project\n\xff\xfe invalid bytes\n";
+        std::fs::write(&path, original).unwrap();
+        let err = update_agents_md(&root, "slug-123").unwrap_err();
+        assert!(err.to_string().contains("refusing to overwrite"));
+        let after = std::fs::read(&path).unwrap();
+        assert_eq!(after, original);
         std::fs::remove_dir_all(&root).unwrap();
     }
 }

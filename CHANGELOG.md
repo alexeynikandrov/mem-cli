@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-07-09
+
+### Fixed
+- `mem-cli init` no longer destroys an existing `AGENTS.md` when the file
+  cannot be read as UTF-8 (or fails to read for any other reason). Previously a
+  read error was silently treated as an empty file, so the managed block
+  overwrote the whole document. Init now aborts with a clear error and leaves
+  the file untouched. A missing `AGENTS.md` is still created as before.
+
 ## [1.7.0] - 2026-06-23
 
 ### Added
